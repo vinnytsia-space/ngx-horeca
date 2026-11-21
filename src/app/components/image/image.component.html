@@ -1,0 +1,69 @@
+@if (isNavigation()) {
+	<a
+		[class]="triggerClass()"
+		[routerLink]="link()"
+		[attr.aria-label]="openAriaLabel()"
+		translate
+		[translate]="{ ariaLabel: openAriaLabel() }"
+	>
+		<img
+			[class]="thumbnailClass()"
+			[alt]="alt()"
+			translate
+			[translate]="{ alt: alt() }"
+			[ngSrc]="src()"
+			[width]="width()"
+			[height]="height()"
+			[loading]="loading()"
+		/>
+	</a>
+} @else {
+	<button
+		#trigger
+		[class]="triggerClass()"
+		[attr.aria-label]="openAriaLabel()"
+		[attr.aria-expanded]="isFullscreen()"
+		translate
+		[translate]="{ ariaLabel: openAriaLabel() }"
+		(click)="open()"
+		type="button"
+	>
+		<img
+			[class]="thumbnailClass()"
+			[alt]="alt()"
+			translate
+			[translate]="{ alt: alt() }"
+			[ngSrc]="src()"
+			[width]="width()"
+			[height]="height()"
+			[loading]="loading()"
+		/>
+	</button>
+}
+
+@if (isFullscreen()) {
+	<div role="dialog" aria-modal="true" [attr.aria-label]="dialogLabel()">
+		<button
+			#closeButton
+			class="fullscreen-backdrop fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-black/88 p-4"
+			[attr.aria-label]="closeLabel()"
+			translate
+			[translate]="{ ariaLabel: closeLabel() }"
+			(click)="close()"
+			(keydown.escape)="close()"
+			(keydown.tab)="$event.preventDefault()"
+			(keydown.shift.tab)="$event.preventDefault()"
+			type="button"
+		>
+			<img
+				[class]="expandedImageClass()"
+				[alt]="alt()"
+				translate
+				[translate]="{ alt: alt() }"
+				[ngSrc]="src()"
+				[width]="width()"
+				[height]="height()"
+			/>
+		</button>
+	</div>
+}

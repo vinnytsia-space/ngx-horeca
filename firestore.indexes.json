@@ -1,0 +1,51 @@
+{
+	"indexes": [
+		{
+			"collectionGroup": "orders",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "createdBy",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "site",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "createdAt",
+					"order": "DESCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "orders",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "site",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "createdAt",
+					"order": "DESCENDING"
+				}
+			]
+		},
+		{
+			"collectionGroup": "requests",
+			"queryScope": "COLLECTION",
+			"fields": [
+				{
+					"fieldPath": "site",
+					"order": "ASCENDING"
+				},
+				{
+					"fieldPath": "createdAt",
+					"order": "DESCENDING"
+				}
+			]
+		}
+	],
+	"fieldOverrides": []
+}

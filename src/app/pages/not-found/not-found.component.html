@@ -1,0 +1,29 @@
+<main class="mx-auto max-w-[var(--container)] px-3 pb-8 pt-3 sm:px-4 sm:pb-10">
+	<section
+		class="rounded-[1.2rem] border border-dashed border-[var(--c-border)] bg-[var(--c-bg-secondary)] px-4 py-10 text-center sm:px-6 sm:py-14"
+	>
+		<div
+			class="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-bg-primary)] text-[var(--c-secondary)]"
+		>
+			<span class="material-symbols-outlined text-[28px]" aria-hidden="true">explore_off</span>
+		</div>
+
+		<p class="mt-4 text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--c-secondary)]">
+			404
+		</p>
+		<h1 class="mt-2 text-xl font-semibold text-[var(--c-text-secondary)]">
+			<span [translate]="'Сторінку не знайдено'">{{ 'Сторінку не знайдено' }}</span>
+		</h1>
+		<p class="mx-auto mt-2 max-w-[28rem] text-sm leading-6 text-[var(--c-text-muted)]">
+			<span [translate]="'Ця сторінка не існує або була переміщена.'">
+				{{ 'Ця сторінка не існує або була переміщена.' }}
+			</span>
+		</p>
+		<a
+			class="mt-6 inline-flex h-11 items-center justify-center rounded-full border border-[var(--c-border)] bg-[var(--c-bg-primary)] px-5 text-sm font-medium text-[var(--c-text-secondary)] transition-colors duration-200 hover:bg-[var(--c-bg-tertiary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--c-primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--c-bg-secondary)]"
+			routerLink="/"
+		>
+			<span [translate]="'Повернутися на головну'">{{ 'Повернутися на головну' }}</span>
+		</a>
+	</section>
+</main>

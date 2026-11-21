@@ -1,0 +1,111 @@
+<main class="mx-auto max-w-[var(--container)] px-3 pb-8 pt-3 sm:px-4 sm:pb-10">
+	<section
+		class="overflow-hidden rounded-[1.2rem] border border-[var(--c-border)] bg-[var(--c-bg-secondary)] shadow-[var(--shadow-sm)]"
+	>
+		<div class="border-b border-[var(--c-border)] px-4 py-5 sm:px-5">
+			<h1 class="text-3xl font-semibold leading-tight text-[var(--c-text-secondary)] sm:text-4xl">
+				<span [translate]="'Мої замовлення'">{{ 'Мої замовлення' }}</span>
+			</h1>
+		</div>
+
+		<div class="grid gap-4 p-4 sm:p-5">
+			@if (!auth.ready()) {
+				<p class="text-sm text-[var(--c-text-muted)]">
+					<span [translate]="'Завантаження…'">{{ 'Завантаження…' }}</span>
+				</p>
+			} @else if (!auth.user()) {
+				<div class="grid justify-items-start gap-3">
+					<p class="text-sm leading-6 text-[var(--c-text-secondary)]">
+						<span [translate]="'Увійдіть, щоб побачити свої замовлення.'">
+							{{ 'Увійдіть, щоб побачити свої замовлення.' }}
+						</span>
+					</p>
+					<app-sign-in-button />
+				</div>
+			} @else {
+				@if (list.error(); as error) {
+					<p class="rounded-[0.9rem] bg-[color:rgba(197,61,61,0.14)] p-3 text-sm font-semibold text-[var(--c-secondary)]" role="alert">
+						<span [translate]="error">{{ error }}</span>
+					</p>
+				}
+				@if (actionError(); as error) {
+					<p class="rounded-[0.9rem] bg-[color:rgba(197,61,61,0.14)] p-3 text-sm font-semibold text-[var(--c-secondary)]" role="alert">
+						<span [translate]="error">{{ error }}</span>
+					</p>
+				}
+
+				@if (list.loading() && !list.items().length) {
+					<p class="text-sm text-[var(--c-text-muted)]">
+						<span [translate]="'Завантаження…'">{{ 'Завантаження…' }}</span>
+					</p>
+				} @else if (!list.items().length && !list.error()) {
+					<div class="grid justify-items-start gap-3">
+						<p class="text-sm text-[var(--c-text-muted)]">
+							<span [translate]="'Замовлень поки немає.'">{{ 'Замовлень поки немає.' }}</span>
+						</p>
+						<a class="ui-btn ui-btn-primary" routerLink="/menu">
+							<span [translate]="'Переглянути меню'">{{ 'Переглянути меню' }}</span>
+						</a>
+					</div>
+				}
+
+				<ul class="grid gap-3">
+					@for (order of list.items(); track order.id) {
+						<li class="rounded-[1rem] border border-[var(--c-border)] bg-[var(--c-bg-primary)] p-4">
+							<div class="flex flex-wrap items-start justify-between gap-3">
+								<div>
+									<p class="text-sm font-semibold text-[var(--c-text-secondary)]">
+										{{ formatDate(order.createdAt) }}
+									</p>
+									<p class="mt-1 text-xs text-[var(--c-text-muted)]">
+										<span [translate]="order.type === 'delivery' ? 'Доставка' : 'Самовивіз'">
+											{{ order.type === 'delivery' ? 'Доставка' : 'Самовивіз' }}
+										</span>
+										@if (order.address) {
+											· {{ order.address }}
+										}
+									</p>
+								</div>
+								<span
+									class="rounded-full border border-[var(--c-border)] px-3 py-1 text-xs font-semibold text-[var(--c-text-secondary)]"
+									[class.!text-[var(--c-secondary)]]="order.status === 'cancelled'"
+								>
+									<span [translate]="statusLabels[order.status]">{{ statusLabels[order.status] }}</span>
+								</span>
+							</div>
+
+							<ul class="mt-3 space-y-1 text-sm text-[var(--c-text-primary)]">
+								@for (item of order.items; track $index) {
+									<li class="flex justify-between gap-3">
+										<span>
+											{{ item.qty }} ×
+											<span [translate]="item.name">{{ item.name }}</span>
+										</span>
+										<span class="shrink-0">{{ item.price * item.qty }} {{ currencyIcon }}</span>
+									</li>
+								}
+							</ul>
+
+							<div class="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-[var(--c-border)] pt-3">
+								<p class="text-base font-semibold text-[var(--c-text-secondary)]">
+									<span [translate]="'Разом'">{{ 'Разом' }}</span>: {{ order.total }} {{ currencyIcon }}
+								</p>
+								@if (order.status === 'new') {
+									<button
+										class="ui-btn ui-btn-secondary disabled:cursor-not-allowed disabled:opacity-60"
+										type="button"
+										[disabled]="cancelling() === order.id"
+										[attr.aria-busy]="cancelling() === order.id"
+										(click)="cancel(order)"
+									>
+										<span [translate]="'Скасувати замовлення'">{{ 'Скасувати замовлення' }}</span>
+									</button>
+								}
+							</div>
+						</li>
+					}
+				</ul>
+			}
+		</div>
+	</section>
+</main>

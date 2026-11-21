@@ -1,0 +1,156 @@
+rules_version = '2';
+
+// Rules of the Firestore database of the ngx-horeca Firebase project (see firebase.json). Deploy:
+//   npm run rules
+// The admin list must match `admins` in src/environments/environment.prod.ts.
+//
+// Every write is also checked for its shape: only the fields the app writes, with their types and
+// sizes. Keep the field lists in step with src/app/feature/firebase/ (orders.service.ts and
+// requests.service.ts).
+service cloud.firestore {
+	match /databases/{database}/documents {
+		function signedIn() {
+			return request.auth != null;
+		}
+
+		// By verified Google email: the same list as `admins` in the environment. A Firebase uid can be
+		// added here (`request.auth.uid in [...]`) together with `uid` in the environment.
+		function isAdmin() {
+			return signedIn()
+				&& request.auth.token.get('email_verified', false) == true
+				&& myEmail() in ['ceo@webart.work'];
+		}
+
+		function isSelf(uid) {
+			return signedIn() && request.auth.uid == uid;
+		}
+
+		function myEmail() {
+			return signedIn() ? request.auth.token.get('email', '').lower() : '';
+		}
+
+		// The email of the Firebase account as the app writes it (`user.email ?? ''`), not lowercased.
+		function myRawEmail() {
+			return request.auth.token.get('email', '');
+		}
+
+		// ---- Shape helpers: they check the document as it will be after the write. ----
+
+		function incoming() {
+			return request.resource.data;
+		}
+
+		// Exactly these fields, no more and no fewer.
+		function hasExactly(keys) {
+			return incoming().keys().hasOnly(keys) && incoming().keys().hasAll(keys);
+		}
+
+		function isText(key, max) {
+			return incoming()[key] is string && incoming()[key].size() <= max;
+		}
+
+		// Not empty and not only spaces.
+		function isFilledText(key, max) {
+			return isText(key, max) && incoming()[key].trim().size() > 0;
+		}
+
+		// A time as the app writes it: `new Date().toISOString()`.
+		function isIsoTime(key) {
+			return incoming()[key] is string
+				&& incoming()[key].matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}([.][0-9]+)?Z$');
+		}
+
+		// Only these fields differ from the stored document.
+		function changesOnly(keys) {
+			return incoming().diff(resource.data).affectedKeys().hasOnly(keys);
+		}
+
+		// ---- orders: placed from the cart page by a signed-in guest. ----
+
+		// ORDER_STATUSES in src/app/feature/firebase/orders.service.ts.
+		function orderStatuses() {
+			return ['new', 'confirmed', 'preparing', 'ready', 'done', 'cancelled'];
+		}
+
+		function orderKeys() {
+			return [
+				'items', 'total', 'currency', 'phone', 'type', 'address', 'comment', 'status',
+				'createdBy', 'createdByEmail', 'createdByName', 'createdAt', 'site'
+			];
+		}
+
+		// Rules cannot loop over a list, so each item's shape is checked by the app, and the admin
+		// confirms prices and the total against the menu before accepting an order.
+		function isValidNewOrder() {
+			return hasExactly(orderKeys())
+				&& incoming().items is list
+				&& incoming().items.size() >= 1
+				&& incoming().items.size() <= 50
+				&& incoming().total is number
+				&& incoming().total >= 0
+				&& isText('currency', 10)
+				&& isFilledText('phone', 100)
+				&& incoming().type in ['pickup', 'delivery']
+				&& isText('address', 500)
+				&& (incoming().type == 'pickup' || isFilledText('address', 500))
+				&& isText('comment', 1000)
+				&& incoming().status == 'new'
+				&& isSelf(incoming().createdBy)
+				&& incoming().createdByEmail == myRawEmail()
+				&& isText('createdByName', 200)
+				&& isIsoTime('createdAt')
+				&& isText('site', 200);
+		}
+
+		match /orders/{orderId} {
+			allow read: if isAdmin() || isSelf(resource.data.createdBy);
+			allow create: if isValidNewOrder();
+			allow update: if (isAdmin()
+					&& changesOnly(['status'])
+					&& incoming().status in orderStatuses())
+				|| (isSelf(resource.data.createdBy)
+					&& resource.data.status == 'new'
+					&& changesOnly(['status'])
+					&& incoming().status == 'cancelled');
+			allow delete: if isAdmin();
+		}
+
+		// ---- requests: booking, room and contact forms, saved next to the Telegram message. ----
+
+		// REQUEST_TYPES in src/app/feature/firebase/requests.service.ts.
+		function requestKeys() {
+			return [
+				'type', 'kind', 'phone', 'name', 'date', 'time', 'guests', 'room', 'comment',
+				'handled', 'createdBy', 'createdAt', 'site'
+			];
+		}
+
+		function isValidNewRequest() {
+			return hasExactly(requestKeys())
+				&& incoming().type in ['booking', 'room', 'contact']
+				&& isText('kind', 50)
+				&& isFilledText('phone', 100)
+				&& isText('name', 200)
+				&& isText('date', 20)
+				&& isText('time', 20)
+				&& isText('guests', 50)
+				&& isText('room', 200)
+				&& isText('comment', 3000)
+				&& incoming().handled == false
+				&& (incoming().createdBy == '' || isSelf(incoming().createdBy))
+				&& isIsoTime('createdAt')
+				&& isText('site', 200);
+		}
+
+		match /requests/{requestId} {
+			allow create: if isValidNewRequest();
+			allow read, delete: if isAdmin();
+			allow update: if isAdmin() && changesOnly(['handled']) && incoming().handled is bool;
+		}
+
+		// Everything else is closed.
+		match /{document=**} {
+			allow read, write: if false;
+		}
+	}
+}

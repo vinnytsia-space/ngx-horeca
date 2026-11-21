@@ -1,0 +1,220 @@
+<main class="mx-auto max-w-[var(--container)] px-3 pb-8 pt-3 sm:px-4 sm:pb-10">
+	<section
+		class="overflow-hidden rounded-[1.2rem] border border-[var(--c-border)] bg-[var(--c-bg-secondary)] shadow-[var(--shadow-sm)]"
+	>
+		<div class="border-b border-[var(--c-border)] px-4 py-5 sm:px-5">
+			<p class="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--c-secondary)]">
+				<span [translate]="'Замовлення'">{{ 'Замовлення' }}</span>
+			</p>
+			<h1 class="mt-3 text-3xl font-semibold leading-tight text-[var(--c-text-secondary)] sm:text-4xl">
+				<span [translate]="'Кошик'">{{ 'Кошик' }}</span>
+			</h1>
+		</div>
+
+		@if (placedOrder(); as order) {
+			<div class="grid gap-4 p-4 sm:p-5" role="status">
+				<div class="rounded-[1rem] bg-[color:rgba(70,130,90,0.12)] p-4 text-[var(--c-text-secondary)]">
+					<p class="text-lg font-semibold">
+						<span [translate]="'Замовлення прийнято'">{{ 'Замовлення прийнято' }}</span>
+					</p>
+					<p class="mt-1 text-sm leading-6">
+						<span [translate]="'Ми зателефонуємо, щоб підтвердити замовлення.'">
+							{{ 'Ми зателефонуємо, щоб підтвердити замовлення.' }}
+						</span>
+					</p>
+					<p class="mt-2 text-sm font-semibold">
+						{{ order.total }} {{ cart.currency.icon }} · {{ order.phone }}
+					</p>
+				</div>
+				<div class="flex flex-wrap gap-3">
+					<a class="ui-btn ui-btn-primary" routerLink="/orders">
+						<span [translate]="'Мої замовлення'">{{ 'Мої замовлення' }}</span>
+					</a>
+					<a class="ui-btn ui-btn-secondary" routerLink="/menu">
+						<span [translate]="'Повернутися до меню'">{{ 'Повернутися до меню' }}</span>
+					</a>
+				</div>
+			</div>
+		} @else if (!cart.lines().length) {
+			<div class="grid justify-items-start gap-4 p-4 sm:p-5">
+				<p class="text-sm leading-6 text-[var(--c-text-muted)]">
+					<span [translate]="'Кошик порожній. Додайте страви з меню.'">
+						{{ 'Кошик порожній. Додайте страви з меню.' }}
+					</span>
+				</p>
+				<a class="ui-btn ui-btn-primary" routerLink="/menu">
+					<span [translate]="'Переглянути меню'">{{ 'Переглянути меню' }}</span>
+				</a>
+			</div>
+		} @else {
+			<form class="grid gap-5 p-4 sm:p-5 lg:grid-cols-[minmax(0,1fr)_20rem]" [formRoot]="checkoutForm">
+				<div class="space-y-5">
+					<ul class="divide-y divide-[var(--c-border)] rounded-[1rem] border border-[var(--c-border)] bg-[var(--c-bg-primary)]">
+						@for (line of cart.lines(); track line.slug) {
+							<li class="flex flex-wrap items-center gap-3 p-3 sm:flex-nowrap">
+								<a class="min-w-[10rem] flex-1" [routerLink]="['/dish', line.slug]">
+									<span class="block truncate text-sm font-semibold text-[var(--c-text-secondary)]">
+										<span [translate]="line.name">{{ line.name }}</span>
+									</span>
+									<span class="text-xs text-[var(--c-text-muted)]">
+										{{ line.price }} {{ cart.currency.icon }}
+									</span>
+								</a>
+								<app-cart-button [slug]="line.slug" />
+								<span class="w-20 text-right text-sm font-semibold text-[var(--c-text-secondary)]">
+									{{ line.sum }} {{ cart.currency.icon }}
+								</span>
+								<button
+									class="inline-flex h-10 w-10 items-center justify-center rounded-full text-[var(--c-text-muted)] transition-colors hover:bg-[var(--c-bg-tertiary)] hover:text-[var(--c-secondary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--c-primary)]"
+									type="button"
+									aria-label="Видалити з кошика"
+									translate
+									[translate]="{ ariaLabel: 'Видалити з кошика' }"
+									(click)="cart.remove(line.slug)"
+								>
+									<span class="material-symbols-outlined text-[20px]" aria-hidden="true">delete</span>
+								</button>
+							</li>
+						}
+					</ul>
+
+					<fieldset class="space-y-3">
+						<legend class="text-sm font-semibold text-[var(--c-text-secondary)]">
+							<span [translate]="'Як отримати замовлення?'">{{ 'Як отримати замовлення?' }}</span>
+						</legend>
+						<div class="grid gap-3 sm:grid-cols-2">
+							<label
+								class="flex cursor-pointer items-center gap-3 rounded-[1rem] border border-[var(--c-border)] bg-[var(--c-bg-primary)] p-4"
+							>
+								<input
+									class="h-4 w-4 accent-[var(--c-secondary)]"
+									type="radio"
+									value="pickup"
+									[formField]="checkoutForm.type"
+								/>
+								<span class="text-sm font-semibold text-[var(--c-text-secondary)]">
+									<span [translate]="'Самовивіз'">{{ 'Самовивіз' }}</span>
+								</span>
+							</label>
+							<label
+								class="flex cursor-pointer items-center gap-3 rounded-[1rem] border border-[var(--c-border)] bg-[var(--c-bg-primary)] p-4"
+							>
+								<input
+									class="h-4 w-4 accent-[var(--c-secondary)]"
+									type="radio"
+									value="delivery"
+									[formField]="checkoutForm.type"
+								/>
+								<span class="text-sm font-semibold text-[var(--c-text-secondary)]">
+									<span [translate]="'Доставка'">{{ 'Доставка' }}</span>
+								</span>
+							</label>
+						</div>
+					</fieldset>
+
+					<div class="grid gap-4 sm:grid-cols-2">
+						<label class="block">
+							<span class="text-sm font-semibold text-[var(--c-text-secondary)]">
+								<span [translate]="'Телефон'">{{ 'Телефон' }}</span>
+								<span class="text-[var(--c-secondary)]" aria-hidden="true">*</span>
+							</span>
+							<input
+								class="mt-2 w-full rounded-[0.9rem] border border-[var(--c-border)] bg-[var(--c-bg-primary)] px-4 py-3 text-sm text-[var(--c-text-secondary)] outline-none transition-colors focus:border-[var(--c-secondary)]"
+								type="tel"
+								autocomplete="tel"
+								[attr.placeholder]="company.phone"
+								[formField]="checkoutForm.phone"
+								[attr.aria-invalid]="checkoutForm.phone().touched() && checkoutForm.phone().invalid()"
+								aria-describedby="checkout-phone-error"
+							/>
+							@if (checkoutForm.phone().touched() && checkoutForm.phone().invalid()) {
+								<p id="checkout-phone-error" class="mt-2 text-xs font-semibold text-[var(--c-secondary)]">
+									<span [translate]="'Номер телефону обов’язковий'">{{ 'Номер телефону обов’язковий' }}</span>
+								</p>
+							}
+						</label>
+
+						@if (checkoutForm.type().value() === 'delivery') {
+							<label class="block">
+								<span class="text-sm font-semibold text-[var(--c-text-secondary)]">
+									<span [translate]="'Адреса доставки'">{{ 'Адреса доставки' }}</span>
+									<span class="text-[var(--c-secondary)]" aria-hidden="true">*</span>
+								</span>
+								<input
+									class="mt-2 w-full rounded-[0.9rem] border border-[var(--c-border)] bg-[var(--c-bg-primary)] px-4 py-3 text-sm text-[var(--c-text-secondary)] outline-none transition-colors focus:border-[var(--c-secondary)]"
+									type="text"
+									autocomplete="street-address"
+									[formField]="checkoutForm.address"
+									[attr.aria-invalid]="checkoutForm.address().touched() && checkoutForm.address().invalid()"
+									aria-describedby="checkout-address-error"
+								/>
+								@if (checkoutForm.address().touched() && checkoutForm.address().invalid()) {
+									<p id="checkout-address-error" class="mt-2 text-xs font-semibold text-[var(--c-secondary)]">
+										<span [translate]="'Вкажіть адресу доставки'">{{ 'Вкажіть адресу доставки' }}</span>
+									</p>
+								}
+							</label>
+						}
+
+						<label class="block sm:col-span-2">
+							<span class="text-sm font-semibold text-[var(--c-text-secondary)]">
+								<span [translate]="'Коментар'">{{ 'Коментар' }}</span>
+							</span>
+							<textarea
+								class="mt-2 min-h-24 w-full resize-y rounded-[0.9rem] border border-[var(--c-border)] bg-[var(--c-bg-primary)] px-4 py-3 text-sm text-[var(--c-text-secondary)] outline-none transition-colors focus:border-[var(--c-secondary)]"
+								[formField]="checkoutForm.comment"
+							></textarea>
+						</label>
+					</div>
+				</div>
+
+				<aside class="h-fit rounded-[1rem] border border-[var(--c-border)] bg-[var(--c-bg-primary)] p-4">
+					<p class="text-[12px] font-semibold uppercase tracking-[0.18em] text-[var(--c-secondary)]">
+						<span [translate]="'Разом'">{{ 'Разом' }}</span>
+					</p>
+					<p class="mt-3 text-3xl font-semibold text-[var(--c-text-secondary)]">
+						{{ cart.total() }} {{ cart.currency.icon }}
+					</p>
+					<p class="mt-3 text-sm leading-6 text-[var(--c-text-muted)]">
+						<span [translate]="'Ми зателефонуємо, щоб підтвердити замовлення.'">
+							{{ 'Ми зателефонуємо, щоб підтвердити замовлення.' }}
+						</span>
+					</p>
+
+					@if (auth.user()) {
+						<button
+							class="ui-btn ui-btn-primary mt-5 w-full justify-center disabled:cursor-not-allowed disabled:opacity-60"
+							type="submit"
+							[disabled]="checkoutForm().submitting()"
+							[attr.aria-busy]="checkoutForm().submitting()"
+						>
+							@if (checkoutForm().submitting()) {
+								<span [translate]="'Надсилаємо…'">{{ 'Надсилаємо…' }}</span>
+							} @else {
+								<span [translate]="'Оформити замовлення'">{{ 'Оформити замовлення' }}</span>
+							}
+						</button>
+					} @else {
+						<div class="mt-5 grid gap-2">
+							<p class="text-sm leading-6 text-[var(--c-text-secondary)]">
+								<span [translate]="'Щоб оформити замовлення, увійдіть через Google.'">
+									{{ 'Щоб оформити замовлення, увійдіть через Google.' }}
+								</span>
+							</p>
+							<app-sign-in-button />
+						</div>
+					}
+
+					@if (submitError()) {
+						<div
+							class="mt-4 rounded-[0.9rem] bg-[color:rgba(197,61,61,0.14)] p-3 text-sm font-semibold leading-6 text-[var(--c-secondary)]"
+							role="alert"
+						>
+							<span [translate]="submitError()">{{ submitError() }}</span>
+						</div>
+					}
+				</aside>
+			</form>
+		}
+	</section>
+</main>
